@@ -13,18 +13,20 @@ A command-line tool to manage different sets of environment variables for Claude
 
 1. **Prerequisites**: You need to have Go installed (version 1.18 or newer).
 
-2. **Build from source**: Clone the repository and build the binary.
+2. **Install from source**: Clone the repository and use `go install`.
 
     ```bash
     git clone https://github.com/ShinoharaHaruna/cc-provider.git
     cd cc-provider
-    go build -o cc-provider .
+    go install .
     ```
 
-3. **Move to a directory in your PATH**: To make the command accessible globally, move it to a location like `/usr/local/bin`.
+    This will compile the binary and place it in your `$GOPATH/bin` directory. To run the `cc-provider` command globally, ensure that this directory is in your system's `PATH`.
+
+    You can do this by adding the following line to your shell's configuration file (e.g., `~/.zshrc` or `~/.bashrc`):
 
     ```bash
-    sudo mv cc-provider /usr/local/bin/
+    export PATH=$PATH:$(go env GOPATH)/bin
     ```
 
 ## How It Works
