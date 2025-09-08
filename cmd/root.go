@@ -1,9 +1,7 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
-	"path/filepath"
 
 	"github.com/spf13/cobra"
 )
@@ -42,28 +40,5 @@ func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
 		os.Exit(1)
-	}
-}
-
-func init() {
-	cobra.OnInitialize(initConfig)
-}
-
-// initConfig creates the configuration directory if it does not exist.
-func initConfig() {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error finding home directory: %v\n", err)
-		os.Exit(1)
-	}
-
-	cfgDir = filepath.Join(home, ".cc-provider")
-	activeEnvFile = filepath.Join(cfgDir, "active_env.sh")
-
-	if _, err := os.Stat(cfgDir); os.IsNotExist(err) {
-		if err := os.MkdirAll(cfgDir, 0755); err != nil {
-			fmt.Fprintf(os.Stderr, "Error creating config directory '%s': %v\n", cfgDir, err)
-			os.Exit(1)
-		}
 	}
 }

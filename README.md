@@ -33,7 +33,14 @@ A command-line tool to manage different sets of environment variables for Claude
 
 The tool manages environment configuration files in the `~/.cc-provider/` directory. When you activate an environment, it generates a script `~/.cc-provider/active_env.sh`.
 
-For the first activation, it automatically adds a `source` command to your `~/.zshrc` or `~/.bashrc` file. This ensures that every new shell session loads the variables from the active environment.
+### Automatic Setup
+
+The first time you run any `cc-provider` command, the tool will automatically perform a one-time setup:
+
+1. It appends a `source` command to your shell's configuration file (e.g., `~/.zshrc` or `~/.bashrc`).
+2. It generates and installs a tab completion script for your shell.
+
+This ensures that both environment variables and tab completion are automatically loaded in every new shell session. You just need to restart your shell once after the initial setup.
 
 ## Commands
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -24,8 +25,9 @@ var listCmd = &cobra.Command{
 
 		var envs []string
 		for _, file := range files {
-			if !file.IsDir() && file.Name() != filepath.Base(activeEnvFile) {
-				envs = append(envs, file.Name())
+			fileName := file.Name()
+			if !file.IsDir() && fileName != filepath.Base(activeEnvFile) && !strings.HasPrefix(fileName, "completion.") {
+				envs = append(envs, fileName)
 			}
 		}
 
