@@ -69,8 +69,11 @@ The first time you run any `cc-provider` command, the tool will automatically pe
 
 1. It appends a `source` command to your shell's configuration file (e.g., `~/.zshrc` or `~/.bashrc`).
 2. It generates and installs a tab completion script for your shell.
+3. It creates a shell function wrapper that enables immediate activation.
 
-This ensures that both environment variables and tab completion are automatically loaded in every new shell session. You just need to restart your shell once after the initial setup.
+This ensures that environment variables, tab completion, and instant activation are available in every new shell session. You just need to restart your shell once after the initial setup.
+
+After setup, `cc-provider activate` works just like `conda activate` - no need for `eval` or shell restart!
 
 ## Commands
 
@@ -92,13 +95,10 @@ cc-provider create
 
 ### `cc-provider activate <env-name>`
 
-Activates the specified environment. After activation, you need to reload your shell's configuration or open a new terminal for the changes to take effect.
+Activates the specified environment immediately in the current shell (no restart needed).
 
 ```bash
 cc-provider activate deepseek
-
-# Then, apply the changes:
-source ~/.zshrc # Or ~/.bashrc
 ```
 
 ### `cc-provider remove <env-name>`

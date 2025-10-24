@@ -110,12 +110,57 @@ func ensureShellConfig() (string, error) {
 		rootCmd.GenZshCompletion(completionFile)
 	}
 
-	// Add source commands for both activation and completion scripts
+	// Create shell function file for cc-provider command wrapper
+	// 创建 cc-provider 命令包装的 shell 函数文件
+	shellFunctionPath := filepath.Join(cfgDir, "shell_function.sh")
+	shellFunctionContent := `# cc-provider shell integration
+# This wraps the cc-provider command to enable immediate activation
+
+cc-provider() {
+    local cmd="$1"
+    shift
+    
+    if [ "$cmd" = "activate" ]; then
+        # Check for --eval flag
+        local use_eval=false
+        local env_name=""
+        
+        for arg in "$@"; do
+            case "$arg" in
+                --eval|-e)
+                    use_eval=true
+                    ;;
+                *)
+                    env_name="$arg"
+                    ;;
+            esac
+        done
+        
+        if [ "$use_eval" = "true" ]; then
+            # Direct eval mode
+            eval "$(command cc-provider activate --eval "$env_name")"
+        else
+            # Automatic eval mode for immediate activation
+            eval "$(command cc-provider activate --eval "$env_name")"
+        fi
+    else
+        # For all other commands, call the actual binary
+        command cc-provider "$cmd" "$@"
+    fi
+}
+`
+	if err := os.WriteFile(shellFunctionPath, []byte(shellFunctionContent), 0644); err != nil {
+		return "", fmt.Errorf("creating shell function file: %w", err)
+	}
+
+	// Add source commands for activation, completion, and shell function scripts
+	// 添加激活、补全和 shell 函数脚本的 source 命令
 	configBlock := fmt.Sprintf(`
 # Added by cc-provider for environment activation and auto-completion
 source "%s"
 source "%s"
-`, activeEnvFile, completionFilePath)
+source "%s"
+`, activeEnvFile, completionFilePath, shellFunctionPath)
 
 	if _, err := f.WriteString(configBlock); err != nil {
 		return "", fmt.Errorf("writing to %s: %w", rcPath, err)
