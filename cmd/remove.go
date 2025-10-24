@@ -11,11 +11,12 @@ import (
 
 // removeCmd represents the remove command
 var removeCmd = &cobra.Command{
-	Use:   "remove [env-name]",
-	Short: "Removes a provider environment.",
-	Long:  `Removes a specified provider environment file. If the environment is currently active, it will be deactivated.`,
-	Args:  cobra.ExactArgs(1),
-	Run:   runRemoveCmd,
+	Use:               "remove [env-name]",
+	Short:             "Removes a provider environment.",
+	Long:              `Removes a specified provider environment file. If the environment is currently active, it will be deactivated.`,
+	Args:              cobra.ExactArgs(1),
+	ValidArgsFunction: completeEnvironmentNamesForRemove,
+	Run:               runRemoveCmd,
 }
 
 func runRemoveCmd(cmd *cobra.Command, args []string) {
@@ -75,6 +76,15 @@ func deactivateActiveEnv() error {
 
 	// Write the script to file
 	return os.WriteFile(activeEnvFile, []byte(sb.String()), 0644)
+}
+
+// completeEnvironmentNamesForRemove provides completion for environment names
+// 为环境名称提供补全
+func completeEnvironmentNamesForRemove(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	if len(args) != 0 {
+		return nil, cobra.ShellCompDirectiveNoFileComp
+	}
+	return getEnvironmentNames(), cobra.ShellCompDirectiveNoFileComp
 }
 
 func init() {

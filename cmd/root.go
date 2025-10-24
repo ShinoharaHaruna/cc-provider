@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -41,4 +42,26 @@ func Execute() {
 	if err != nil {
 		os.Exit(1)
 	}
+}
+
+// getEnvironmentNames returns a list of available environment names for completion
+// 返回可用环境名称列表用于补全
+func getEnvironmentNames() []string {
+	files, err := os.ReadDir(cfgDir)
+	if err != nil {
+		return []string{}
+	}
+
+	var envs []string
+	for _, file := range files {
+		fileName := file.Name()
+		// 过滤掉系统文件 / Filter out system files
+		if !file.IsDir() &&
+			fileName != "active_env.sh" &&
+			!strings.HasPrefix(fileName, "completion.") &&
+			fileName != "shell_function.sh" {
+			envs = append(envs, fileName)
+		}
+	}
+	return envs
 }

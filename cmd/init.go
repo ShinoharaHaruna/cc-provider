@@ -65,20 +65,29 @@ func ensureShellConfig() (string, error) {
 	// Check if the source line for active_env.sh already exists
 	file, err := os.Open(rcPath)
 	needsSetup := true
+	needsShellFunction := false
 	if err == nil {
 		scanner := bufio.NewScanner(file)
 		sourceLine := fmt.Sprintf("source \"%s\"", activeEnvFile)
+		shellFunctionPath := filepath.Join(cfgDir, "shell_function.sh")
+		shellFunctionSourceLine := fmt.Sprintf("source \"%s\"", shellFunctionPath)
+
+		hasActiveEnv := false
+		hasShellFunction := false
+
 		for scanner.Scan() {
-			if strings.Contains(scanner.Text(), sourceLine) {
-				needsSetup = false
-				break
+			line := scanner.Text()
+			if strings.Contains(line, sourceLine) {
+				hasActiveEnv = true
+			}
+			if strings.Contains(line, shellFunctionSourceLine) {
+				hasShellFunction = true
 			}
 		}
 		file.Close()
-	}
 
-	if !needsSetup {
-		return rcPath, nil // Already configured
+		needsSetup = !hasActiveEnv
+		needsShellFunction = !hasShellFunction && hasActiveEnv // Only add if already has active_env
 	}
 
 	// Create an empty active_env.sh if it doesn't exist, to prevent source errors on shell startup.
@@ -88,32 +97,11 @@ func ensureShellConfig() (string, error) {
 		}
 	}
 
-	// Append the source lines to the rc file
-	f, err := os.OpenFile(rcPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		return "", fmt.Errorf("opening %s for appending: %w", rcPath, err)
-	}
-	defer f.Close()
-
-	// Generate and write completion script
-	completionFilePath := filepath.Join(cfgDir, "completion."+shellType)
-	completionFile, err := os.Create(completionFilePath)
-	if err != nil {
-		return "", fmt.Errorf("creating completion file: %w", err)
-	}
-	defer completionFile.Close()
-
-	switch shellType {
-	case "bash":
-		rootCmd.GenBashCompletion(completionFile)
-	case "zsh":
-		rootCmd.GenZshCompletion(completionFile)
-	}
-
-	// Create shell function file for cc-provider command wrapper
-	// 创建 cc-provider 命令包装的 shell 函数文件
+	// Always ensure shell function file exists (for upgrades)
+	// 始终确保 shell 函数文件存在(用于升级)
 	shellFunctionPath := filepath.Join(cfgDir, "shell_function.sh")
-	shellFunctionContent := `# cc-provider shell integration
+	if _, err := os.Stat(shellFunctionPath); os.IsNotExist(err) || needsShellFunction {
+		shellFunctionContent := `# cc-provider shell integration
 # This wraps the cc-provider command to enable immediate activation
 
 cc-provider() {
@@ -149,8 +137,57 @@ cc-provider() {
     fi
 }
 `
-	if err := os.WriteFile(shellFunctionPath, []byte(shellFunctionContent), 0644); err != nil {
-		return "", fmt.Errorf("creating shell function file: %w", err)
+		if err := os.WriteFile(shellFunctionPath, []byte(shellFunctionContent), 0644); err != nil {
+			return "", fmt.Errorf("creating shell function file: %w", err)
+		}
+	}
+
+	// If already configured but missing shell function, add it
+	// 如果已配置但缺少 shell 函数,添加它
+	if needsShellFunction {
+		f, err := os.OpenFile(rcPath, os.O_APPEND|os.O_WRONLY, 0644)
+		if err != nil {
+			return "", fmt.Errorf("opening %s for appending: %w", rcPath, err)
+		}
+		defer f.Close()
+
+		shellFunctionSourceLine := fmt.Sprintf("\nsource \"%s\"\n", shellFunctionPath)
+		if _, err := f.WriteString(shellFunctionSourceLine); err != nil {
+			return "", fmt.Errorf("writing to %s: %w", rcPath, err)
+		}
+
+		fmt.Printf("Updated shell configuration in '%s' to add shell function support.\n", rcPath)
+		fmt.Println("Please restart your shell or source your config file to apply changes.")
+		return rcPath, nil
+	}
+
+	// If already fully configured, just return
+	// 如果已完全配置,直接返回
+	if !needsSetup {
+		return rcPath, nil
+	}
+
+	// Full setup for first-time users
+	// 首次用户的完整设置
+	f, err := os.OpenFile(rcPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return "", fmt.Errorf("opening %s for appending: %w", rcPath, err)
+	}
+	defer f.Close()
+
+	// Generate and write completion script
+	completionFilePath := filepath.Join(cfgDir, "completion."+shellType)
+	completionFile, err := os.Create(completionFilePath)
+	if err != nil {
+		return "", fmt.Errorf("creating completion file: %w", err)
+	}
+	defer completionFile.Close()
+
+	switch shellType {
+	case "bash":
+		rootCmd.GenBashCompletion(completionFile)
+	case "zsh":
+		rootCmd.GenZshCompletion(completionFile)
 	}
 
 	// Add source commands for activation, completion, and shell function scripts

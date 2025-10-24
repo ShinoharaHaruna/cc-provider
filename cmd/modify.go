@@ -12,11 +12,12 @@ import (
 
 // modifyCmd represents the modify command
 var modifyCmd = &cobra.Command{
-	Use:   "modify [env-name]",
-	Short: "Interactively modifies an existing provider environment.",
-	Long:  `Interactively prompts for the necessary details to modify an existing provider environment file in the ~/.cc-provider directory.`,
-	Args:  cobra.MaximumNArgs(1),
-	Run:   runModifyCmd,
+	Use:               "modify [env-name]",
+	Short:             "Interactively modifies an existing provider environment.",
+	Long:              `Interactively prompts for the necessary details to modify an existing provider environment file in the ~/.cc-provider directory.`,
+	Args:              cobra.MaximumNArgs(1),
+	ValidArgsFunction: completeEnvironmentNamesForModify,
+	Run:               runModifyCmd,
 }
 
 func runModifyCmd(cmd *cobra.Command, args []string) {
@@ -202,6 +203,15 @@ func promptWithExisting(reader *bufio.Reader, message, existingValue string, req
 	}
 
 	return input
+}
+
+// completeEnvironmentNamesForModify provides completion for environment names
+// 为环境名称提供补全
+func completeEnvironmentNamesForModify(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	if len(args) != 0 {
+		return nil, cobra.ShellCompDirectiveNoFileComp
+	}
+	return getEnvironmentNames(), cobra.ShellCompDirectiveNoFileComp
 }
 
 func init() {

@@ -56,7 +56,16 @@ func runExportCmd(cmd *cobra.Command, args []string) {
 	}
 }
 
+// completeEnvironmentNamesForExport provides completion for environment names
+// 为环境名称提供补全
+func completeEnvironmentNamesForExport(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	return getEnvironmentNames(), cobra.ShellCompDirectiveNoFileComp
+}
+
 func init() {
 	rootCmd.AddCommand(exportCmd)
 	exportCmd.Flags().StringVar(&exportName, "name", "", "Name of the environment to export")
+	// Register completion for the --name flag
+	// 为 --name 标志注册补全
+	exportCmd.RegisterFlagCompletionFunc("name", completeEnvironmentNamesForExport)
 }

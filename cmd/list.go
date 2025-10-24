@@ -26,7 +26,11 @@ var listCmd = &cobra.Command{
 		var envs []string
 		for _, file := range files {
 			fileName := file.Name()
-			if !file.IsDir() && fileName != filepath.Base(activeEnvFile) && !strings.HasPrefix(fileName, "completion.") {
+			// 过滤掉系统文件 / Filter out system files
+			if !file.IsDir() &&
+				fileName != filepath.Base(activeEnvFile) &&
+				!strings.HasPrefix(fileName, "completion.") &&
+				fileName != "shell_function.sh" {
 				envs = append(envs, fileName)
 			}
 		}

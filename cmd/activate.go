@@ -23,8 +23,9 @@ For immediate activation in current shell, use:
   eval "$(cc-provider activate --eval <env-name>)"
 
 Otherwise, restart your shell or source your shell config file to apply changes.`,
-	Args: cobra.ExactArgs(1),
-	Run:  runActivateCmd,
+	Args:              cobra.ExactArgs(1),
+	ValidArgsFunction: completeEnvironmentNames,
+	Run:               runActivateCmd,
 }
 
 func runActivateCmd(cmd *cobra.Command, args []string) {
@@ -142,6 +143,15 @@ func writeActiveEnvScript(envName, envFilePath string) error {
 
 	// Write the generated script to the active_env.sh file.
 	return os.WriteFile(activeEnvFile, []byte(sb.String()), 0644)
+}
+
+// completeEnvironmentNames provides completion for environment names
+// 为环境名称提供补全
+func completeEnvironmentNames(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	if len(args) != 0 {
+		return nil, cobra.ShellCompDirectiveNoFileComp
+	}
+	return getEnvironmentNames(), cobra.ShellCompDirectiveNoFileComp
 }
 
 func init() {
