@@ -31,3 +31,9 @@ go.work.sum
 # Editor/IDE
 # .idea/
 # .vscode/
+
+# Release artifacts
+*.tar.gz
+*.zip
+*.sha256
+release/

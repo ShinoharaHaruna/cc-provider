@@ -1,0 +1,81 @@
+name: Multi-platform Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-and-release:
+    name: Build and Release
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    strategy:
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+            output: cc-provider-linux-amd64
+          - goos: linux
+            goarch: arm64
+            output: cc-provider-linux-arm64
+          - goos: darwin
+            goarch: amd64
+            output: cc-provider-darwin-amd64
+          - goos: darwin
+            goarch: arm64
+            output: cc-provider-darwin-arm64
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+
+      - name: Get version info
+        id: version
+        run: |
+          VERSION=$(git describe --tags --always --dirty 2>/dev/null || echo "0.1.0")
+          BUILD_TIME=$(date -u '+%Y-%m-%d %H:%M:%S UTC')
+          GIT_COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "build_time=$BUILD_TIME" >> $GITHUB_OUTPUT
+          echo "git_commit=$GIT_COMMIT" >> $GITHUB_OUTPUT
+
+      - name: Build binary for ${{ matrix.goos }}/${{ matrix.goarch }}
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 0
+        run: |
+          LDFLAGS="-X 'cc-provider/cmd.Version=${{ steps.version.outputs.version }}' \
+                   -X 'cc-provider/cmd.BuildTime=${{ steps.version.outputs.build_time }}' \
+                   -X 'cc-provider/cmd.GitCommit=${{ steps.version.outputs.git_commit }}'"
+
+          go build -ldflags "$LDFLAGS" -o ${{ matrix.output }} .
+
+      - name: Create release archive
+        run: |
+          if [[ "${{ matrix.goos }}" == "windows" ]]; then
+            zip ${{ matrix.output }}.zip ${{ matrix.output }}
+            sha256sum ${{ matrix.output }}.zip > ${{ matrix.output }}.zip.sha256
+          else
+            tar -czf ${{ matrix.output }}.tar.gz ${{ matrix.output }}
+            sha256sum ${{ matrix.output }}.tar.gz > ${{ matrix.output }}.tar.gz.sha256
+          fi
+
+      - name: Upload to release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            ${{ matrix.output }}.*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

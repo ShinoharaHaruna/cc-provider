@@ -1,5 +1,9 @@
 # Claude Code Provider (`cc-provider`)
 
+[![CI](https://github.com/ShinoharaHaruna/cc-provider/actions/workflows/ci.yml/badge.svg)](https://github.com/ShinoharaHaruna/cc-provider/actions/workflows/ci.yml)
+[![Release](https://github.com/ShinoharaHaruna/cc-provider/actions/workflows/release.yml/badge.svg)](https://github.com/ShinoharaHaruna/cc-provider/actions/workflows/release.yml)
+[![License](https://img.shields.io/github/license/ShinoharaHaruna/cc-provider)](LICENSE)
+
 A command-line tool to manage different sets of environment variables for Claude Code, allowing you to easily switch between various API providers like DeepSeek, Anthropic, etc.
 
 ## Core Features
@@ -10,6 +14,23 @@ A command-line tool to manage different sets of environment variables for Claude
 - **Export Configurations**: Export environment settings to a `.env` file format.
 
 ## Installation
+
+### Download Pre-built Binaries
+
+Download the latest release for your platform from the [Releases](https://github.com/ShinoharaHaruna/cc-provider/releases) page.
+
+**Linux/macOS:**
+
+```bash
+# Download and extract (replace VERSION and PLATFORM as needed)
+wget https://github.com/ShinoharaHaruna/cc-provider/releases/download/v0.1.0/cc-provider-linux-amd64.tar.gz
+tar -xzf cc-provider-linux-amd64.tar.gz
+
+# Move to a directory in your PATH
+sudo mv cc-provider /usr/local/bin/
+```
+
+### Build from Source
 
 1. **Prerequisites**: You need to have Go installed (version 1.18 or newer).
 
