@@ -13,11 +13,18 @@ A command-line tool to manage different sets of environment variables for Claude
 
 1. **Prerequisites**: You need to have Go installed (version 1.18 or newer).
 
-2. **Install from source**: Clone the repository and use `go install`.
+2. **Install from source**: Clone the repository and build with version information.
 
     ```bash
     git clone https://github.com/ShinoharaHaruna/cc-provider.git
     cd cc-provider
+    make
+    make install
+    ```
+
+    Then use the traditional `go install` to use it globally:
+
+    ```bash
     go install .
     ```
 
@@ -28,6 +35,14 @@ A command-line tool to manage different sets of environment variables for Claude
     ```bash
     export PATH=$PATH:$(go env GOPATH)/bin
     ```
+
+3. **Build locally**: To build the binary without installing:
+
+    ```bash
+    make build
+    ```
+
+    The binary will be placed in `bin/cc-provider`.
 
 ## How It Works
 
@@ -93,4 +108,23 @@ Exports a specific environment's configuration.
 
 ```bash
 cc-provider export --name deepseek
+```
+
+### `cc-provider modify [env-name]`
+
+Interactively modifies an existing provider environment. If no environment name is provided, you will be prompted to select from available environments.
+
+```bash
+cc-provider modify deepseek
+
+# Or select interactively:
+cc-provider modify
+```
+
+### `cc-provider version`
+
+Displays version information including the semantic version, build time, and git commit hash.
+
+```bash
+cc-provider version
 ```
