@@ -4,6 +4,8 @@
 [![Release](https://github.com/ShinoharaHaruna/cc-provider/actions/workflows/release.yml/badge.svg)](https://github.com/ShinoharaHaruna/cc-provider/actions/workflows/release.yml)
 [![License](https://img.shields.io/github/license/ShinoharaHaruna/cc-provider)](LICENSE)
 
+[中文文档](README_cn.md)
+
 A command-line tool to manage different sets of environment variables for Claude Code, allowing you to easily switch between various API providers like DeepSeek, Anthropic, etc.
 
 ## Core Features
