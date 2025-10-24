@@ -19,11 +19,18 @@ A command-line tool to manage different sets of environment variables for Claude
 
 Download the latest release for your platform from the [Releases](https://github.com/ShinoharaHaruna/cc-provider/releases) page.
 
-**Linux/macOS:**
+Supported platforms:
+
+- Linux
+  - linux-amd64
+  - linux-arm64
+- macOS
+  - darwin-amd64
+  - darwin-arm64
 
 ```bash
-# Download and extract (replace VERSION and PLATFORM as needed)
-wget https://github.com/ShinoharaHaruna/cc-provider/releases/download/v0.1.0/cc-provider-linux-amd64.tar.gz
+# Download and extract (replace PLATFORM as needed)
+wget https://github.com/ShinoharaHaruna/cc-provider/releases/latest/download/cc-provider-linux-amd64.tar.gz
 tar -xzf cc-provider-linux-amd64.tar.gz
 
 # Move to a directory in your PATH
