@@ -43,12 +43,6 @@ sudo mv cc-provider /usr/local/bin/
     make install
     ```
 
-    Then use the traditional `go install` to use it globally:
-
-    ```bash
-    go install .
-    ```
-
     This will compile the binary and place it in your `$GOPATH/bin` directory. To run the `cc-provider` command globally, ensure that this directory is in your system's `PATH`.
 
     You can do this by adding the following line to your shell's configuration file (e.g., `~/.zshrc` or `~/.bashrc`):
