@@ -125,8 +125,12 @@ func selectEnvironment(reader *bufio.Reader) string {
 
 	var envs []string
 	for _, entry := range entries {
-		if !entry.IsDir() && entry.Name() != "active_env.sh" {
-			envs = append(envs, entry.Name())
+		name := entry.Name()
+		if !entry.IsDir() &&
+			name != "active_env.sh" &&
+			!strings.HasPrefix(name, "completion.") &&
+			name != "shell_function.sh" {
+			envs = append(envs, name)
 		}
 	}
 
@@ -140,13 +144,16 @@ func selectEnvironment(reader *bufio.Reader) string {
 		fmt.Printf("  %d. %s\n", i+1, env)
 	}
 
-	fmt.Print("\nSelect environment number: ")
+	fmt.Print("\nSelect environment number (0 to cancel): ")
 	input, _ := reader.ReadString('\n')
 	input = strings.TrimSpace(input)
 
 	var selection int
-	if _, err := fmt.Sscanf(input, "%d", &selection); err != nil || selection < 1 || selection > len(envs) {
+	if _, err := fmt.Sscanf(input, "%d", &selection); err != nil || selection < 0 || selection > len(envs) {
 		fmt.Fprintf(os.Stderr, "Invalid selection.\n")
+		return ""
+	}
+	if selection == 0 {
 		return ""
 	}
 
