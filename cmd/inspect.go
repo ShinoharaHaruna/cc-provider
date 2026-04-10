@@ -25,8 +25,7 @@ func runInspectCmd(cmd *cobra.Command, args []string) {
 	if len(args) == 0 {
 		envName = selectEnvironment(reader)
 		if envName == "" {
-			fmt.Fprintf(os.Stderr, "Error: No environment selected.\n")
-			os.Exit(1)
+			return
 		}
 	} else {
 		envName = args[0]
