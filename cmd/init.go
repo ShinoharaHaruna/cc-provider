@@ -14,7 +14,7 @@ import (
 func Init() {
 	// This function is called from main.go before any command is executed.
 	setupConfigPaths()
-	if _, err := ensureShellConfig(); err != nil {
+	if _, err := ensureShellConfig(false); err != nil {
 		fmt.Fprintf(os.Stderr, "Error during initial shell setup: %v\n", err)
 		os.Exit(1)
 	}
@@ -40,7 +40,7 @@ func setupConfigPaths() {
 }
 
 // ensureShellConfig checks and modifies the user's shell configuration file.
-func ensureShellConfig() (string, error) {
+func ensureShellConfig(forceUpdate bool) (string, error) {
 	shell := os.Getenv("SHELL")
 	var shellType string
 	var rcFileName string
@@ -98,15 +98,14 @@ func ensureShellConfig() (string, error) {
 	}
 
 	// Always ensure shell function file exists (for upgrades)
-	// 始终确保 shell 函数文件存在(用于升级)
 	shellFunctionPath := filepath.Join(cfgDir, "shell_function.sh")
-	if _, err := os.Stat(shellFunctionPath); os.IsNotExist(err) || needsShellFunction {
+	if _, err := os.Stat(shellFunctionPath); os.IsNotExist(err) || needsShellFunction || forceUpdate {
 		shellFunctionContent := `# cc-provider shell integration
 # This wraps the cc-provider command to enable immediate activation
 
 cc-provider() {
     local cmd="$1"
-    shift
+    [ $# -gt 0 ] && shift
     
     if [ "$cmd" = "activate" ]; then
         # Check for --eval flag

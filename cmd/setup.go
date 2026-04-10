@@ -17,8 +17,7 @@ This is useful after upgrading cc-provider or if the shell integration is not wo
 
 func runSetupCmd(cmd *cobra.Command, args []string) {
 	// Force re-run the shell configuration setup
-	// 强制重新运行 shell 配置设置
-	rcPath, err := ensureShellConfig()
+	rcPath, err := ensureShellConfig(true)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error during shell setup: %v\n", err)
 		os.Exit(1)
