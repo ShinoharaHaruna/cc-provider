@@ -69,9 +69,29 @@ func runModifyCmd(cmd *cobra.Command, args []string) {
 		envVars = append(envVars, "ANTHROPIC_MODEL="+model)
 	}
 
-	smallModel := promptWithExisting(reader, "  ANTHROPIC_SMALL_FAST_MODEL", existingVars["ANTHROPIC_SMALL_FAST_MODEL"], false)
-	if smallModel != "" {
-		envVars = append(envVars, "ANTHROPIC_SMALL_FAST_MODEL="+smallModel)
+	haikuModel := promptWithExisting(reader, "  ANTHROPIC_DEFAULT_HAIKU_MODEL", existingVars["ANTHROPIC_DEFAULT_HAIKU_MODEL"], false)
+	if haikuModel != "" {
+		envVars = append(envVars, "ANTHROPIC_DEFAULT_HAIKU_MODEL="+haikuModel)
+	}
+
+	sonnetModel := promptWithExisting(reader, "  ANTHROPIC_DEFAULT_SONNET_MODEL", existingVars["ANTHROPIC_DEFAULT_SONNET_MODEL"], false)
+	if sonnetModel != "" {
+		envVars = append(envVars, "ANTHROPIC_DEFAULT_SONNET_MODEL="+sonnetModel)
+	}
+
+	opusModel := promptWithExisting(reader, "  ANTHROPIC_DEFAULT_OPUS_MODEL", existingVars["ANTHROPIC_DEFAULT_OPUS_MODEL"], false)
+	if opusModel != "" {
+		envVars = append(envVars, "ANTHROPIC_DEFAULT_OPUS_MODEL="+opusModel)
+	}
+
+	subagentModel := promptWithExisting(reader, "  CLAUDE_CODE_SUBAGENT_MODEL", existingVars["CLAUDE_CODE_SUBAGENT_MODEL"], false)
+	if subagentModel != "" {
+		envVars = append(envVars, "CLAUDE_CODE_SUBAGENT_MODEL="+subagentModel)
+	}
+
+	effortLevel := promptWithExisting(reader, "  CLAUDE_CODE_EFFORT_LEVEL", existingVars["CLAUDE_CODE_EFFORT_LEVEL"], false)
+	if effortLevel != "" {
+		envVars = append(envVars, "CLAUDE_CODE_EFFORT_LEVEL="+effortLevel)
 	}
 
 	// 可选项(带默认值) / Optional inputs with defaults
@@ -178,6 +198,12 @@ func readEnvFile(filePath string) (map[string]string, error) {
 		if parts := strings.SplitN(line, "=", 2); len(parts) == 2 {
 			key := parts[0]
 			value := strings.Trim(parts[1], `"`)
+
+			// Migrate ANTHROPIC_SMALL_FAST_MODEL to ANTHROPIC_DEFAULT_HAIKU_MODEL
+			if key == "ANTHROPIC_SMALL_FAST_MODEL" {
+				key = "ANTHROPIC_DEFAULT_HAIKU_MODEL"
+			}
+
 			envVars[key] = value
 		}
 	}

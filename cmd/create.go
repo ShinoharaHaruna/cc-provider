@@ -30,38 +30,98 @@ func runCreateCmd(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	var envVars []string
+	// 2. Ask if user wants to use a template
+	fmt.Println("\nWould you like to use a template? (y/n)")
+	useTemplate := prompt(reader, "Use template", false)
+	var envVars map[string]string
 
-	// 2. Required inputs
-	fmt.Println("\nEnter required variables: ")
-	envVars = append(envVars, "ANTHROPIC_BASE_URL="+prompt(reader, "  ANTHROPIC_BASE_URL (e.g., https://api.deepseek.com/anthropic)", true))
-	envVars = append(envVars, "ANTHROPIC_AUTH_TOKEN="+prompt(reader, "  ANTHROPIC_AUTH_TOKEN", true))
-
-	// 3. Recommended inputs
-	fmt.Println("\nEnter recommended variables (press Enter to skip): ")
-	if model := prompt(reader, "  ANTHROPIC_MODEL (e.g., deepseek-chat)", false); model != "" {
-		envVars = append(envVars, "ANTHROPIC_MODEL="+model)
-	}
-	if smallModel := prompt(reader, "  ANTHROPIC_SMALL_FAST_MODEL (e.g., deepseek-coder)", false); smallModel != "" {
-		envVars = append(envVars, "ANTHROPIC_SMALL_FAST_MODEL="+smallModel)
-	}
-
-	// 4. Optional inputs with defaults
-	fmt.Println("\nEnter optional variables (press Enter to use default): ")
-	timeout := promptWithDefault(reader, "  API_TIMEOUT_MS", "600000")
-	envVars = append(envVars, "API_TIMEOUT_MS="+timeout)
-
-	disableTraffic := promptWithDefault(reader, "  CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC", "1")
-	envVars = append(envVars, "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC="+disableTraffic)
-
-	// 5. Write to file
-	var finalEnvVars []string
-	for _, envVar := range envVars {
-		if parts := strings.SplitN(envVar, "=", 2); len(parts) == 2 {
-			finalEnvVars = append(finalEnvVars, fmt.Sprintf("%s=\"%s\"", parts[0], parts[1]))
-		} else {
-			finalEnvVars = append(finalEnvVars, envVar)
+	if strings.ToLower(useTemplate) == "y" || strings.ToLower(useTemplate) == "yes" {
+		// List available templates
+		templates, err := listTemplates()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error listing templates: %v\n", err)
+			os.Exit(1)
 		}
+
+		if len(templates) == 0 {
+			fmt.Println("No templates available. Creating environment manually.")
+			envVars = make(map[string]string)
+		} else {
+			fmt.Println("\nAvailable templates:")
+			for i, tmpl := range templates {
+				fmt.Printf("  %d. %s - %s\n", i+1, tmpl.Name, tmpl.Description)
+			}
+
+			selection := prompt(reader, "\nSelect template number (or press Enter to skip)", false)
+			if selection != "" {
+				var idx int
+				if _, err := fmt.Sscanf(selection, "%d", &idx); err == nil && idx > 0 && idx <= len(templates) {
+					selectedTmpl := templates[idx-1]
+					envVars = make(map[string]string)
+					for k, v := range selectedTmpl.EnvVars {
+						envVars[k] = v
+					}
+					fmt.Printf("\nUsing template '%s'.\n", selectedTmpl.Name)
+				} else {
+					fmt.Println("Invalid selection. Creating environment manually.")
+					envVars = make(map[string]string)
+				}
+			} else {
+				envVars = make(map[string]string)
+			}
+		}
+	} else {
+		envVars = make(map[string]string)
+	}
+
+	// 3. Required inputs
+	fmt.Println("\nEnter required variables: ")
+	if baseURL := promptWithExisting(reader, "  ANTHROPIC_BASE_URL", envVars["ANTHROPIC_BASE_URL"], true); baseURL != "" {
+		envVars["ANTHROPIC_BASE_URL"] = baseURL
+	}
+	if authToken := promptWithExisting(reader, "  ANTHROPIC_AUTH_TOKEN", envVars["ANTHROPIC_AUTH_TOKEN"], true); authToken != "" {
+		envVars["ANTHROPIC_AUTH_TOKEN"] = authToken
+	}
+
+	// 4. Recommended inputs
+	fmt.Println("\nEnter recommended variables (press Enter to skip): ")
+	if model := promptWithExisting(reader, "  ANTHROPIC_MODEL", envVars["ANTHROPIC_MODEL"], false); model != "" {
+		envVars["ANTHROPIC_MODEL"] = model
+	}
+	if haikuModel := promptWithExisting(reader, "  ANTHROPIC_DEFAULT_HAIKU_MODEL", envVars["ANTHROPIC_DEFAULT_HAIKU_MODEL"], false); haikuModel != "" {
+		envVars["ANTHROPIC_DEFAULT_HAIKU_MODEL"] = haikuModel
+	}
+	if sonnetModel := promptWithExisting(reader, "  ANTHROPIC_DEFAULT_SONNET_MODEL", envVars["ANTHROPIC_DEFAULT_SONNET_MODEL"], false); sonnetModel != "" {
+		envVars["ANTHROPIC_DEFAULT_SONNET_MODEL"] = sonnetModel
+	}
+	if opusModel := promptWithExisting(reader, "  ANTHROPIC_DEFAULT_OPUS_MODEL", envVars["ANTHROPIC_DEFAULT_OPUS_MODEL"], false); opusModel != "" {
+		envVars["ANTHROPIC_DEFAULT_OPUS_MODEL"] = opusModel
+	}
+	if subagentModel := promptWithExisting(reader, "  CLAUDE_CODE_SUBAGENT_MODEL", envVars["CLAUDE_CODE_SUBAGENT_MODEL"], false); subagentModel != "" {
+		envVars["CLAUDE_CODE_SUBAGENT_MODEL"] = subagentModel
+	}
+	if effortLevel := promptWithExisting(reader, "  CLAUDE_CODE_EFFORT_LEVEL", envVars["CLAUDE_CODE_EFFORT_LEVEL"], false); effortLevel != "" {
+		envVars["CLAUDE_CODE_EFFORT_LEVEL"] = effortLevel
+	}
+
+	// 5. Optional inputs with defaults
+	fmt.Println("\nEnter optional variables (press Enter to use default): ")
+	timeout := promptWithExisting(reader, "  API_TIMEOUT_MS", envVars["API_TIMEOUT_MS"], false)
+	if timeout == "" {
+		timeout = "600000"
+	}
+	envVars["API_TIMEOUT_MS"] = timeout
+
+	disableTraffic := promptWithExisting(reader, "  CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC", envVars["CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC"], false)
+	if disableTraffic == "" {
+		disableTraffic = "1"
+	}
+	envVars["CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC"] = disableTraffic
+
+	// 6. Write to file
+	var finalEnvVars []string
+	for key, value := range envVars {
+		finalEnvVars = append(finalEnvVars, fmt.Sprintf("%s=\"%s\"", key, value))
 	}
 
 	content := strings.Join(finalEnvVars, "\n")
